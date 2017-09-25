@@ -29,6 +29,7 @@ header <- dashboardHeader(title = "MISTEdv", titleWidth = 300,
 
 sidebar <- dashboardSidebar(width = 300,
    sidebarMenu(
+     submitButton("Apply changes", icon("paper-plane")),
       #Tools for creating correlated stations table
 	   menuItem("Find Correlated Stations", tabName = "tabset1",
           textInput("ID3", "Station ID for comparison", "ID"),
@@ -68,7 +69,7 @@ sidebar <- dashboardSidebar(width = 300,
 	  #and adding seasonal constants for regression
 	  menuItem("Regression Tuning",
 	      radioButtons("Method", label = "Select regression method",
-                         choices = list("Linear" = 1, "gam" = 2),
+                         choices = list("Linear" = 1, "GAM" = 2),
                          selected = 1),
 		    checkboxInput("adjQ", "Adjust range of discharge values for regression", value = FALSE),
 		    numericInput("qRange1", "Lowest daily mean discharge", 0),
@@ -681,7 +682,7 @@ server <- function(input, output) ({
 		      scale_y_log10() +
 		      scale_x_log10() +
 		      annotation_logticks(sides = "trbl") +
-          stat_smooth(method = "gam", formula = y ~ poly(x, 2)) + 
+          stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) + 
           labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID), 
                y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
           theme_bw() + theme(legend.title = element_blank())
@@ -738,7 +739,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y)
             
@@ -746,78 +747,9 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y, fourier(datP$Date))
-            
-          }
-          
-          datP$Predicted <- 10^(predict(regObj, predSet))
-          
-          datP$pred <- predict(regObj, predSet)
-          
-          datP$Date <- as.Date(datP$Date, format = "%Y-%m-%d")
-          
-          p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
-            geom_point(size = 3) +
-            stat_smooth(method = "lm") + 
-            labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
-            theme_bw() + theme(legend.title = element_blank())
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y, fourier(datP$Date))
-            
-          }
-          
-          datP$Predicted <- 10^(predict(regObj, predSet))
-          
-          datP$pred <- predict(regObj, predSet)
-          
-          datP$Date <- as.Date(datP$Date, format = "%Y-%m-%d")
-          
-          p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
-            geom_point(size = 3) +
-            stat_smooth(method = "lm") + 
-            labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
-            theme_bw() + theme(legend.title = element_blank())
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.y = datP$X_00060_00003.y, fourier(datP$Date))
-            
             
           }
           
@@ -877,7 +809,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -885,71 +817,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          datP$Predicted <- 10^(predict(regObj, predSet))
-          
-          datP$pred <- predict(regObj, predSet)
-          
-          p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
-            geom_point(size = 3) +
-            stat_smooth(method = "lm") + 
-            labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
-            theme_bw() + theme(legend.title = element_blank())
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          datP$Predicted <- 10^(predict(regObj, predSet))
-          
-          datP$pred <- predict(regObj, predSet)
-          
-          p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
-            geom_point(size = 3) +
-            stat_smooth(method = "lm") + 
-            labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
-            theme_bw() + theme(legend.title = element_blank())
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = dat, span = input$regSpan)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -1003,49 +871,13 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- lm(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
           }
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + fourier(Date), data = dat)
-            
-          }
-          
-          summary (regObj)
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-          }
-          
-          summary (regObj)
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
+            regObj <- lm(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
           }
           
@@ -1079,13 +911,13 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
             
           }
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
             
           }
           
@@ -1093,42 +925,6 @@ server <- function(input, output) ({
           
         }
         
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = dat)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = dat)
-            
-          }
-          
-          summary (regObj)
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = dat, span = input$regSpan)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = dat, span = input$regSpan)
-            
-          }
-          
-          summary (regObj)
-          
-        }
-                
       }
 	  
   })
@@ -1241,7 +1037,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
             
@@ -1249,7 +1045,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x) + fourier(Date), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
             
@@ -1262,197 +1058,6 @@ server <- function(input, output) ({
           datPred[,(1:4)] <- 10^datPred[,(1:4)]
           
           datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-          
-          if (input$smooth == TRUE) {
-            
-            startSm <- input$dates4[1] - as.difftime(1, units = "days")
-            
-            endSm <- input$dates4[2] + as.difftime(1, units = "days")
-            
-            smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-            
-            allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-            
-            leftResid <- allResids[1]
-            
-            rightResid <- allResids[(length(allResids))]
-            
-            diffDates <- as.numeric(endSm) - as.numeric(startSm)
-            
-            slopeResid <- (rightResid - leftResid) / diffDates
-            
-            intercept <- leftResid
-            
-            smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-            
-            smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-            
-            smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-            
-            if (smPeriod$Smoothed < 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-            }
-            
-            else if (smPeriod$Smoothed >= 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-            }
-            
-            datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-            
-          }
-          
-          if (datP$Estimated < 10) {
-            datP$Estimated <- signif(datP$Estimated, 2)
-          }
-          
-          else if (datP$Estimated >= 10) {
-            datP$Estimated <- signif(datP$Estimated, 3)
-          }
-          
-          if (datP$fitUpper < 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 2)
-          }
-          
-          else if (datP$fitUpper >= 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 3)
-          }
-          
-          if (datP$fitLower < 10) {
-            datP$fitLower <- signif(datP$fitLower, 2)
-          }
-          
-          else if (datP$fitLower >= 10) {
-            datP$fitLower <- signif(datP$fitLower, 3)
-          }
-          
-          datP$standardError <- signif(datP$standardError, 3)
-          
-          DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if(input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-          
-          if (input$smooth == TRUE) {
-            
-            startSm <- input$dates4[1] - as.difftime(1, units = "days")
-            
-            endSm <- input$dates4[2] + as.difftime(1, units = "days")
-            
-            smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-            
-            allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-            
-            leftResid <- allResids[1]
-            
-            rightResid <- allResids[(length(allResids))]
-            
-            diffDates <- as.numeric(endSm) - as.numeric(startSm)
-            
-            slopeResid <- (rightResid - leftResid) / diffDates
-            
-            intercept <- leftResid
-            
-            smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-            
-            smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-            
-            smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-            
-            if (smPeriod$Smoothed < 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-            }
-            
-            else if (smPeriod$Smoothed >= 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-            }
-            
-            datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-            
-          }
-          
-          if (datP$Estimated < 10) {
-            datP$Estimated <- signif(datP$Estimated, 2)
-          }
-          
-          else if (datP$Estimated >= 10) {
-            datP$Estimated <- signif(datP$Estimated, 3)
-          }
-          
-          if (datP$fitUpper < 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 2)
-          }
-          
-          else if (datP$fitUpper >= 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 3)
-          }
-          
-          if (datP$fitLower < 10) {
-            datP$fitLower <- signif(datP$fitLower, 2)
-          }
-          
-          else if (datP$fitLower >= 10) {
-            datP$fitLower <- signif(datP$fitLower, 3)
-          }
-          
-          datP$standardError <- signif(datP$standardError, 3)
-          
-          DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,(1:3)] <- 10^estVals[,(1:3)]
-          
-          datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
           
           datP <- cbind(datP, datPred)
           
@@ -1628,7 +1233,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = datP)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = datP)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -1636,7 +1241,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2) + fourier(Date), 2), data = datP)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = datP)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -1649,195 +1254,6 @@ server <- function(input, output) ({
           datPred[,(1:4)] <- 10^datPred[,(1:4)]
           
           datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-          
-          if (input$smooth == TRUE) {
-            
-            startSm <- input$dates4[1] - as.difftime(1, units = "days")
-            
-            endSm <- input$dates4[2] + as.difftime(1, units = "days")
-            
-            smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-            
-            allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-            
-            leftResid <- allResids[1]
-            
-            rightResid <- allResids[(length(allResids))]
-            
-            diffDates <- as.numeric(endSm) - as.numeric(startSm)
-            
-            slopeResid <- (rightResid - leftResid) / diffDates
-            
-            intercept <- leftResid
-            
-            smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-            
-            smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-            
-            smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-            
-            if (smPeriod$Smoothed < 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-            }
-            
-            else if (smPeriod$Smoothed >= 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-            }
-            
-            datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-            
-          }
-          
-          if (datP$Estimated < 10) {
-            datP$Estimated <- signif(datP$Estimated, 2)
-          }
-          
-          else if (datP$Estimated >= 10) {
-            datP$Estimated <- signif(datP$Estimated, 3)
-          }
-          
-          if (datP$fitUpper < 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 2)
-          }
-          
-          else if (datP$fitUpper >= 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 3)
-          }
-          
-          if (datP$fitLower < 10) {
-            datP$fitLower <- signif(datP$fitLower, 2)
-          }
-          
-          else if (datP$fitLower >= 10) {
-            datP$fitLower <- signif(datP$fitLower, 3)
-          }
-          
-          datP$standardError <- signif(datP$standardError, 3)
-          
-          DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = datP)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = datP)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-          
-          if (input$smooth == TRUE) {
-            
-            startSm <- input$dates4[1] - as.difftime(1, units = "days")
-            
-            endSm <- input$dates4[2] + as.difftime(1, units = "days")
-            
-            smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-            
-            allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-            
-            leftResid <- allResids[1]
-            
-            rightResid <- allResids[(length(allResids))]
-            
-            diffDates <- as.numeric(endSm) - as.numeric(startSm)
-            
-            slopeResid <- (rightResid - leftResid) / diffDates
-            
-            intercept <- leftResid
-            
-            smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-            
-            smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-            
-            smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-            
-            if (smPeriod$Smoothed < 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-            }
-            
-            else if (smPeriod$Smoothed >= 10) {
-              smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-            }
-            
-            datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-            
-          }
-          
-          if (datP$Estimated < 10) {
-            datP$Estimated <- signif(datP$Estimated, 2)
-          }
-          
-          else if (datP$Estimated >= 10) {
-            datP$Estimated <- signif(datP$Estimated, 3)
-          }
-          
-          if (datP$fitUpper < 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 2)
-          }
-          
-          else if (datP$fitUpper >= 10) {
-            datP$fitUpper <- signif(datP$fitUpper, 3)
-          }
-          
-          if (datP$fitLower < 10) {
-            datP$fitLower <- signif(datP$fitLower, 2)
-          }
-          
-          else if (datP$fitLower >= 10) {
-            datP$fitLower <- signif(datP$fitLower, 3)
-          }
-          
-          datP$standardError <- signif(datP$standardError, 3)
-          
-          DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = datP, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = datP, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
           
           datP <- cbind(datP, datPred)
           
@@ -1997,7 +1413,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
             
@@ -2005,7 +1421,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
             
@@ -2023,142 +1439,7 @@ server <- function(input, output) ({
           
           datPlot$Date <- as.Date(datPlot$Date)
 		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,(1:3)] <- 10^estVals[,(1:3)]
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = (estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
+		      datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
           
           if (input$log10 == FALSE) {
             
@@ -2230,7 +1511,7 @@ server <- function(input, output) ({
           
           datPlot$Date <- as.Date(datPlot$Date)
 		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
+		      datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
           
           if (input$log10 == FALSE) {
             
@@ -2274,7 +1555,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -2282,7 +1563,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -2300,146 +1581,7 @@ server <- function(input, output) ({
           
           datPlot$Date <- as.Date(datPlot$Date)
 		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			        geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
-			        geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,1:3] <- 10^(estVals[,1:3])
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = (estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-		  
-		  datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
+		      datMeas$measurement_dt <- as.Date(datMeas$measurement_dt)
           
           if (input$log10 == FALSE) {
             
@@ -2546,7 +1688,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
             
@@ -2554,7 +1696,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
             
@@ -2583,107 +1725,7 @@ server <- function(input, output) ({
           
           o <- ggplot() +
             geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          print(grid.arrange (p, o, ncol = 1))
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Residuals <- datPlot$X_00060_00003.y - datPlot$Estimated
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          p <- ggplot() +
-            geom_line(data = datPlot, aes(x = Date, y = Residuals)) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          o <- ggplot() +
-            geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          print(grid.arrange (p, o, ncol = 1))
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,(1:3)] <- 10^estVals[,(1:3)]
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * estVals$se), fitLower = (estVals$fit - qt(0.975, estVals$df) * estVals$se), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Residuals <- datPlot$X_00060_00003.y - datPlot$Estimated
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          p <- ggplot() +
-            geom_line(data = datPlot, aes(x = Date, y = Residuals)) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          o <- ggplot() +
-            geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
+			      scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
             #scale_y_log10() +
             #annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Residuals") +
@@ -2738,7 +1780,7 @@ server <- function(input, output) ({
           
           o <- ggplot() +
             geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
+			      scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
             #scale_y_log10() +
             #annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Residuals") +
@@ -2752,7 +1794,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -2760,7 +1802,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -2789,107 +1831,7 @@ server <- function(input, output) ({
           
           o <- ggplot() +
             geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          print(grid.arrange (p, o, ncol = 1))
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Residuals <- datPlot$X_00060_00003.y - datPlot$Estimated
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          p <- ggplot() +
-            geom_line(data = datPlot, aes(x = Date, y = Residuals)) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          o <- ggplot() +
-            geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          print(grid.arrange (p, o, ncol = 1))
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,1:3] <- 10^(estVals[,1:3])
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * estVals$se), fitLower = (estVals$fit - qt(0.975, estVals$df) * estVals$se), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Residuals <- datPlot$X_00060_00003.y - datPlot$Estimated
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          p <- ggplot() +
-            geom_line(data = datPlot, aes(x = Date, y = Residuals)) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
-            labs(x = "Date", y = "Residuals") +
-            theme_bw() + theme(legend.title = element_blank(), legend.key = element_blank(), legend.text = element_blank())
-          
-          o <- ggplot() +
-            geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-			scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
+			      scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
             #scale_y_log10() +
             #annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Residuals") +
@@ -2915,13 +1857,13 @@ server <- function(input, output) ({
                               
           p <- ggplot(data = dat, aes(x = X_00060_00003.x2, y = X_00060_00003.y)) +
               geom_point() +
-			  scale_y_log10() +
-			  scale_x_log10() +
-			  annotation_logticks(sides = "trbl") +
-			  stat_smooth(method = "lm") +
-            labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID2), 
-                 y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
-            theme_bw() + theme(legend.title = element_blank())
+			        scale_y_log10() +
+			        scale_x_log10() +
+			        annotation_logticks(sides = "trbl") +
+			        stat_smooth(method = "lm") +
+              labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID2), 
+                   y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
+              theme_bw() + theme(legend.title = element_blank())
           
           p
           
@@ -2934,39 +1876,10 @@ server <- function(input, output) ({
 			  scale_y_log10() +
 			  scale_x_log10() +
 			  annotation_logticks(sides = "trbl") +
-			  stat_smooth(method = "lm", formula = y ~ poly(x,2)) +
+			  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
              labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID2), 
                   y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
              theme_bw() + theme(legend.title = element_blank())
-            
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-                      
-            p <- ggplot(data = dat, aes(x = X_00060_00003.x2, y = log10(X_00060_00003.y))) +
-              geom_point() +
-			  scale_y_log10() +
-			  scale_x_log10() +
-			  annotation_logticks(sides = "trbl") +
-			  stat_smooth(method = "loess", formula = y ~ poly(x,3)) +
-              labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID2), 
-                   y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
-              theme_bw() + theme(legend.title = element_blank())
-            
-			p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-            p <- ggplot(data = dat, aes(x = log10(X_00060_00003.x2), y = log10(X_00060_00003.y))) +
-              geom_point() +
-			  stat_smooth(method = "loess", span = input$regSpan) +
-              labs(x = paste0("Discharge, in cubic feet per second \n for ", input$xID2), 
-                   y = paste0("Discharge, in cubic feet per second \n for ", input$yID)) + 
-              theme_bw() + theme(legend.title = element_blank())
             
           p
           
@@ -3035,12 +1948,12 @@ server <- function(input, output) ({
           if (input$log10 == FALSE) {
             
             p <- ggplot(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-			  geom_line() +
+			        geom_line() +
               geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               #scale_y_log10() +
               #annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3056,7 +1969,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               scale_y_log10() +
               annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3072,7 +1985,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
             
@@ -3080,7 +1993,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
             
@@ -3106,7 +2019,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               #scale_y_log10() +
               #annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3122,137 +2035,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              #scale_y_log10() +
-              #annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,(1:3)] <- 10^estVals[,(1:3)]
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * estVals$se), fitLower = (estVals$fit - qt(0.975, estVals$df) * estVals$se), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              #scale_y_log10() +
-              #annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot() +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               scale_y_log10() +
               annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3307,7 +2090,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
               theme_bw() + theme(legend.title = element_blank())
             
@@ -3322,7 +2105,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               scale_y_log10() +
               annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3338,7 +2121,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -3346,7 +2129,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2) + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -3373,7 +2156,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
               theme_bw() + theme(legend.title = element_blank())
             
@@ -3388,137 +2171,7 @@ server <- function(input, output) ({
               geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
               geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
               geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-          
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,1:3] <- 10^(estVals[,1:3])
-          
-          datPred <- data.frame(Estimated = estVals$fit, fitUpper = (estVals$fit + qt(0.975, estVals$df) * estVals$se), fitLower = (estVals$fit - qt(0.975, estVals$df) * estVals$se), standardError = estVals$se.fit)
-          
-          datPlot <- cbind(datP, datPred)
-          
-          datPlot$Date <- as.Date(datPlot$Date)
-          
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = dat) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datPlot, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-			  coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
+			        coord_cartesian(xlim = ranges2$x, ylim = ranges2$y) +
               scale_y_log10() +
               annotation_logticks(sides = "rl") +
               labs(x = "Date", y = "Discharge, in cubic feet per second") +
@@ -3638,7 +2291,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
             
@@ -3646,7 +2299,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x) + fourier(Date), 2), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
             
@@ -3688,185 +2341,6 @@ server <- function(input, output) ({
           
           datP <- merge(x = datP, y = smPeriod, by = "Date", all.x = FALSE)
           
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              #scale_y_log10() +
-              #annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-		  
-        }
-        
-        else if (input$Method == 3) {
-          
-          if(input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-          
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-            
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all.x = FALSE)
-		  
-		      if (input$log10 == FALSE) {
-            
-		        p <- ggplot(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-		          geom_line() +
-		          geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-		          geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-		          geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-		          geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-		          geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-		          #scale_y_log10() +
-              #annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }	
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          estVals[,(1:3)] <- 10^estVals[,(1:3)]
-          
-          datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
-          
-          datP <- cbind(datP, datPred)
-                      
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all.x = FALSE)
-
           if (input$log10 == FALSE) {
             
             p <- ggplot(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
@@ -4001,7 +2475,7 @@ server <- function(input, output) ({
           
           if (input$useSeas == FALSE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = datP)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = datP)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
             
@@ -4009,7 +2483,7 @@ server <- function(input, output) ({
           
           else if (input$useSeas == TRUE) {
             
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2) + fourier(Date), 2), data = datP)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = datP)
             
             predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
             
@@ -4062,183 +2536,6 @@ server <- function(input, output) ({
 		          geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
 		          geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
 		          labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-
-        }
-        
-        else if (input$Method == 3) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = datP)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = datP)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-          
-          datPred <- data.frame(estVals)
-          
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
-          
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-          
-          datP <- cbind(datP, datPred)
-                      
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all.x = FALSE)
-		  
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank())
-            
-          }
-          
-          else if (input$log10 == TRUE) {
-            
-            p <- ggplot() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              scale_y_log10() +
-              annotation_logticks(sides = "rl") +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
-              theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
-            
-          }
-          
-          p
-  
-        }
-        
-        else if (input$Method == 4) {
-          
-          if (input$useSeas == FALSE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = datP, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-            
-          }
-          
-          else if (input$useSeas == TRUE) {
-            
-            regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = datP, span = input$regSpan)
-            
-            predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-            
-          }
-          
-          estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-          
-          datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-		    fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
-          
-          datP <- cbind(datP, datPred)
-                      
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all.x = FALSE)
-		  
-          if (input$log10 == FALSE) {
-            
-            p <- ggplot() +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x, color = paste0("x-", input$xID))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.x2, color = paste0("x2-", input$xID2))) +
-              geom_line(data = datP, aes(x = Date, y = X_00060_00003.y, color = paste0("y-", input$yID))) +
-              geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
-              geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
-              geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-              geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-              labs(x = "Date", y = "Discharge, in cubic feet per second") +
               theme_bw() + theme(legend.title = element_blank())
             
           }
@@ -4414,7 +2711,7 @@ server <- function(input, output) ({
         
         if (input$useSeas == FALSE) {
           
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2), data = dat)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
           
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
           
@@ -4422,7 +2719,7 @@ server <- function(input, output) ({
         
         else if (input$useSeas == TRUE) {
           
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x) + fourier(Date), 2), data = dat)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
           
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
           
@@ -4435,197 +2732,6 @@ server <- function(input, output) ({
         datPred[,(1:4)] <- 10^datPred[,(1:4)]
         
         datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-        
-        datP <- cbind(datP, datPred)
-        
-        if (input$smooth == TRUE) {
-          
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          if (smPeriod$Smoothed < 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-          }
-          
-          else if (smPeriod$Smoothed >= 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-          }
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-          
-        }
-        
-        if (datP$Estimated < 10) {
-          datP$Estimated <- signif(datP$Estimated, 2)
-        }
-        
-        else if (datP$Estimated >= 10) {
-          datP$Estimated <- signif(datP$Estimated, 3)
-        }
-        
-        if (datP$fitUpper < 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 2)
-        }
-        
-        else if (datP$fitUpper >= 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 3)
-        }
-        
-        if (datP$fitLower < 10) {
-          datP$fitLower <- signif(datP$fitLower, 2)
-        }
-        
-        else if (datP$fitLower >= 10) {
-          datP$fitLower <- signif(datP$fitLower, 3)
-        }
-        
-        datP$standardError <- signif(datP$standardError, 3)
-        
-        DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-        
-      }
-      
-      else if (input$Method == 3) {
-        
-        if(input$useSeas == FALSE) {
-          
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3), data = dat)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-          
-        }
-        
-        else if (useSeas == TRUE) {
-          
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + fourier(Date), data = dat)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-          
-        }
-        
-        estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-        
-        datPred <- data.frame(estVals)
-        
-        datPred[,(1:4)] <- 10^datPred[,(1:4)]
-        
-        datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-        
-        datP <- cbind(datP, datPred)
-        
-        if (input$smooth == TRUE) {
-          
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          if (smPeriod$Smoothed < 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-          }
-          
-          else if (smPeriod$Smoothed >= 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-          }
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-          
-        }
-        
-        if (datP$Estimated < 10) {
-          datP$Estimated <- signif(datP$Estimated, 2)
-        }
-        
-        else if (datP$Estimated >= 10) {
-          datP$Estimated <- signif(datP$Estimated, 3)
-        }
-        
-        if (datP$fitUpper < 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 2)
-        }
-        
-        else if (datP$fitUpper >= 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 3)
-        }
-        
-        if (datP$fitLower < 10) {
-          datP$fitLower <- signif(datP$fitLower, 2)
-        }
-        
-        else if (datP$fitLower >= 10) {
-          datP$fitLower <- signif(datP$fitLower, 3)
-        }
-        
-        datP$standardError <- signif(datP$standardError, 3)
-        
-        DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-        
-      }
-      
-      else if (input$Method == 4) {
-        
-        if (input$useSeas == FALSE) {
-          
-          regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x), data = dat, span = input$regSpan)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x)
-          
-        }
-        
-        else if (input$useSeas == TRUE) {
-          
-          regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + fourier(Date), data = dat, span = input$regSpan)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, fourier(datP$Date))
-          
-        }
-        
-        estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-        
-        estVals[,(1:3)] <- 10^estVals[,(1:3)]
-        
-        datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-                              fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
         
         datP <- cbind(datP, datPred)
         
@@ -4801,7 +2907,7 @@ server <- function(input, output) ({
         
         if (input$useSeas == FALSE) {
           
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2), 2), data = datP)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = datP)
           
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
           
@@ -4809,7 +2915,7 @@ server <- function(input, output) ({
         
         else if (input$useSeas == TRUE) {
           
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 2) + poly(log10(X_00060_00003.x2) + fourier(Date), 2), data = datP)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = datP)
           
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
           
@@ -4822,195 +2928,6 @@ server <- function(input, output) ({
         datPred[,(1:4)] <- 10^datPred[,(1:4)]
         
         datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-        
-        datP <- cbind(datP, datPred)
-        
-        if (input$smooth == TRUE) {
-          
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          if (smPeriod$Smoothed < 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-          }
-          
-          else if (smPeriod$Smoothed >= 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-          }
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-          
-        }
-        
-        if (datP$Estimated < 10) {
-          datP$Estimated <- signif(datP$Estimated, 2)
-        }
-        
-        else if (datP$Estimated >= 10) {
-          datP$Estimated <- signif(datP$Estimated, 3)
-        }
-        
-        if (datP$fitUpper < 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 2)
-        }
-        
-        else if (datP$fitUpper >= 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 3)
-        }
-        
-        if (datP$fitLower < 10) {
-          datP$fitLower <- signif(datP$fitLower, 2)
-        }
-        
-        else if (datP$fitLower >= 10) {
-          datP$fitLower <- signif(datP$fitLower, 3)
-        }
-        
-        datP$standardError <- signif(datP$standardError, 3)
-        
-        DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-        
-      }
-      
-      else if (input$Method == 3) {
-        
-        if (input$useSeas == FALSE) {
-          
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3), data = datP)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-          
-        }
-        
-        else if (input$useSeas == TRUE) {
-          
-          regObj <- lm(log10(X_00060_00003.y) ~ poly(log10(X_00060_00003.x), 3) + poly(log10(X_00060_00003.x2), 3) + fourier(Date), data = datP)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-          
-        }
-        
-        estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
-        
-        datPred <- data.frame(estVals)
-        
-        datPred[,(1:4)] <- 10^datPred[,(1:4)]
-        
-        datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
-        
-        datP <- cbind(datP, datPred)
-        
-        if (input$smooth == TRUE) {
-          
-          startSm <- input$dates4[1] - as.difftime(1, units = "days")
-          
-          endSm <- input$dates4[2] + as.difftime(1, units = "days")
-          
-          smPeriod <- subset(datP, Date >= startSm & Date <= endSm)
-          
-          allResids <- smPeriod$X_00060_00003.y - smPeriod$Estimated
-          
-          leftResid <- allResids[1]
-          
-          rightResid <- allResids[(length(allResids))]
-          
-          diffDates <- as.numeric(endSm) - as.numeric(startSm)
-          
-          slopeResid <- (rightResid - leftResid) / diffDates
-          
-          intercept <- leftResid
-          
-          smPeriod$adjResid <- intercept + slopeResid*(as.numeric(smPeriod$Date) - as.numeric(startSm))
-          
-          smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
-          
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
-          
-          if (smPeriod$Smoothed < 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
-          }
-          
-          else if (smPeriod$Smoothed >= 10) {
-            smPeriod$Smoothed <- signif(smPeriod$Smoothed, 3)
-          }
-          
-          datP <- merge(x = datP, y = smPeriod, by = "Date", all = TRUE)
-          
-        }
-        
-        if (datP$Estimated < 10) {
-          datP$Estimated <- signif(datP$Estimated, 2)
-        }
-        
-        else if (datP$Estimated >= 10) {
-          datP$Estimated <- signif(datP$Estimated, 3)
-        }
-        
-        if (datP$fitUpper < 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 2)
-        }
-        
-        else if (datP$fitUpper >= 10) {
-          datP$fitUpper <- signif(datP$fitUpper, 3)
-        }
-        
-        if (datP$fitLower < 10) {
-          datP$fitLower <- signif(datP$fitLower, 2)
-        }
-        
-        else if (datP$fitLower >= 10) {
-          datP$fitLower <- signif(datP$fitLower, 3)
-        }
-        
-        datP$standardError <- signif(datP$standardError, 3)
-        
-        DT::datatable(datP, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
-        
-      }
-      
-      else if (input$Method == 4) {
-        
-        if (input$useSeas == FALSE) {
-          
-          regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2), data = datP, span = input$regSpan)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
-          
-        }
-        
-        else if (input$useSeas == TRUE) {
-          
-          regObj <- loess(log10(X_00060_00003.y) ~ log10(X_00060_00003.x) + log10(X_00060_00003.x2) + fourier(Date), data = datP, span = input$regSpan)
-          
-          predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
-          
-        }
-        
-        estVals <- data.frame(predict(regObj, predSet, se = TRUE))
-        
-        datPred <- data.frame(Estimated = 10^(estVals$fit), fitUpper = 10^(estVals$fit + qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), 
-                              fitLower = 10^(estVals$fit - qt(0.975, estVals$df) * sqrt(estVals$se^2+var(regObj$residuals))), standardError = estVals$se.fit)
         
         datP <- cbind(datP, datPred)
         
