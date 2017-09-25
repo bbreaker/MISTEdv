@@ -1427,13 +1427,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -1569,13 +1574,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -1702,13 +1712,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -1808,13 +1823,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -1999,13 +2019,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -2135,13 +2160,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datPlot <- cbind(datP, datPred)
           
@@ -2305,13 +2335,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datP <- cbind(datP, datPred)
                       
@@ -2489,13 +2524,18 @@ server <- function(input, output) ({
             
           }
           
-          estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
           
           datPred <- data.frame(estVals)
           
-          datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
           
-          datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+          
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3), 
+                                fitUpper = signif(10^(upr), 3), 
+                                fitLower = signif(10^(lwr), 3), 
+                                standardError = signif(datPred$se.fit, 3))
           
           datP <- cbind(datP, datPred)
                       
