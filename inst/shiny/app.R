@@ -873,13 +873,13 @@ server <- function(input, output) ({
 
           if (input$useSeas == FALSE) {
 
-            regObj <- lm(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs"), data = dat)
 
           }
 
           else if (input$useSeas == TRUE) {
 
-            regObj <- lm(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
+            regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
 
           }
 
