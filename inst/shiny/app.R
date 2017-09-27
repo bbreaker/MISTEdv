@@ -12,7 +12,7 @@ library (zoo)
 library (lubridate)
 library (smwrStats)
 library (mgcv)
-library(broom)
+library (broom)
 
 source("global.R")
 
@@ -29,6 +29,7 @@ sidebar <- dashboardSidebar(width = 300,
    sidebarMenu(
      submitButton("Apply changes", icon("paper-plane")),
      menuItem("Find Correlated Stations", tabName = "tabset1",
+              textInput("ID3", "Station ID for response station", "ID3"),
               numericInput("long1", "Western most longitude", -94.9),
               numericInput("lat1", "Southern most latitude", 35.4),
               numericInput("long2", "Eastern most longitude", -91.5),
@@ -307,8 +308,8 @@ server <- function(input, output) ({
       datxP$Date <- as.Date(datyP$Date, format = "%Y-%m-%d")
 
       datP <- merge(x = datxP, y = datyP, by = "Date", all = TRUE)
-
-	  return (datP)
+      
+      return (datP)
 
 	 }
 
@@ -472,7 +473,7 @@ server <- function(input, output) ({
 
   ##################################################################
 
-  source("availDVs",local=TRUE)$value
+  source("availDVs.R",local=TRUE)$value
 
   ##################################################################
 

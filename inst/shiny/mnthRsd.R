@@ -47,7 +47,7 @@ datP <- getDatP()
 
         o <- ggplot() +
           geom_boxplot(data = datPlot, aes(x = Date, y = Residuals, group = format(Date, "%Y-%m")), outlier.shape = NA) +
-          scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9))) +
+          scale_y_continuous(limits = quantile(datPlot$Residuals, c(0.1, 0.9), na.rm = TRUE)) +
           #scale_y_log10() +
           #annotation_logticks(sides = "rl") +
           labs(x = "Date", y = "Residuals") +
