@@ -29,7 +29,7 @@ sidebar <- dashboardSidebar(width = 300,
    sidebarMenu(
      submitButton("Apply changes", icon("paper-plane")),
      menuItem("Find Correlated Stations", tabName = "tabset1",
-              textInput("ID3", "Station ID for response station", "ID3"),
+              textInput("Station ID", "Station ID for response station", "ID3"),
               numericInput("long1", "Western most longitude", -94.9),
               numericInput("lat1", "Southern most latitude", 35.4),
               numericInput("long2", "Eastern most longitude", -91.5),
@@ -310,7 +310,7 @@ server <- function(input, output) ({
       datxP$Date <- as.Date(datyP$Date, format = "%Y-%m-%d")
 
       datP <- merge(x = datxP, y = datyP, by = "Date", all = TRUE)
-      
+
       return (datP)
 
 	 }
@@ -446,11 +446,11 @@ server <- function(input, output) ({
   source("YvsXPlot2.R",local=TRUE)$value
 
   ##################################################################
-  
+
   ##################################################################
-  
+
   source("dvResids.R",local=TRUE)$value
-  
+
   ##################################################################
 
   ranges2 <- reactiveValues(x = NULL, y = NULL)
