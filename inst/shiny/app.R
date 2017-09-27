@@ -17,11 +17,6 @@ source("global.R")
 
 options(DT.options = list(pageLength = 7, language = list(search = 'Filter:')))
 
-#First stable version, 2016-02-22
-#This vesion, 2017-09-26
-#This set of tools is intended to assist in the review and estimation of daily discharge values
-#Author: Brian Breaker
-
 header <- dashboardHeader(title = "MISTEdv", titleWidth = 300,
                           tags$li(a(href = "https://www.usgs.gov/products/data-and-tools/real-time-data/water",
                                     img(src = "gsLogoBlack.png",
@@ -32,117 +27,104 @@ header <- dashboardHeader(title = "MISTEdv", titleWidth = 300,
 sidebar <- dashboardSidebar(width = 300,
    sidebarMenu(
      submitButton("Apply changes", icon("paper-plane")),
-      #Tools for creating correlated stations table
-	   menuItem("Find Correlated Stations", tabName = "tabset1",
-          textInput("ID3", "Station ID for comparison", "ID"),
-		  numericInput("long1", "Western most longitude", -94.9),
-	      numericInput("lat1", "Southern most latitude", 35.4),
-	      numericInput("long2", "Eastern most longitude", -91.5),
-	      numericInput("lat2", "Northern most latitude", 36.9)
+     menuItem("Find Correlated Stations", tabName = "tabset1",
+              numericInput("long1", "Western most longitude", -94.9),
+              numericInput("lat1", "Southern most latitude", 35.4),
+              numericInput("long2", "Eastern most longitude", -91.5),
+              numericInput("lat2", "Northern most latitude", 36.9)
 	  ),
-	   #Tools for adding response and explanatory stations and date ranges for regression
-	   #and estimation... also date range for smoothing and apply smoothing
-	   menuItem("Data Estimation", tabName = "tabset1",
-	      checkboxInput("log10", "Plot y axis in log10 scale for time series plots",
-	                     value = TRUE),
-	      dateRangeInput("dates3",
-	                    "Date range for regression",
-	                    start = as.character(Sys.Date() - 761),
-	                    end = as.character(Sys.Date() - 396)),
-	      dateRangeInput("dates2",
-                       "Date range for estimation",
-                       start = as.character(Sys.Date() - 38),
-                       end = as.character(Sys.Date() - 31)),
-		  textInput("yID", "Station ID for response station", "yID"),
-          textInput("xID", "Station ID for explanatory station 1", "xID"),
-		  sliderInput("lag1", "Lag for explanatory station 1 (in days)", min = -8, max = 8, value = 0),
-          checkboxInput("use2", "Use a second explanatory station",
-                      value = FALSE),
-          textInput("xID2", "Station ID for explanatory station 2", "xID2"),
-		  sliderInput("lag2", "Lag for explanatory station 2 (in days)", min = -8, max = 8, value = 0)
-	  ),
-	  #Tools for changing regression type, setting Q range for regression,
-	  #and adding seasonal constants for regression
+	  menuItem("Data Estimation", tabName = "tabset1",
+	           checkboxInput("log10", "Plot y axis in log10 scale for time series plots",
+	                         value = TRUE),
+	           dateRangeInput("dates3",
+	                          "Date range for regression",
+	                          start = as.character(Sys.Date() - 761),
+	                          end = as.character(Sys.Date() - 396)),
+	           dateRangeInput("dates2",
+	                          "Date range for estimation",
+	                          start = as.character(Sys.Date() - 38),
+	                          end = as.character(Sys.Date() - 31)),
+	           textInput("yID", "Station ID for response station", "yID"),
+	           textInput("xID", "Station ID for explanatory station 1", "xID"),
+	           sliderInput("lag1", "Lag for explanatory station 1 (in days)", min = -8, max = 8, value = 0),
+	           checkboxInput("use2", "Use a second explanatory station",
+	                         value = FALSE),
+	           textInput("xID2", "Station ID for explanatory station 2", "xID2"),
+	           sliderInput("lag2", "Lag for explanatory station 2 (in days)", min = -8, max = 8, value = 0)
+	           ),
 	  menuItem("Regression Tuning",
-        dateRangeInput("dates4",
-                         "Date range for missing DVs to smooth",
-                         start = as.character(Sys.Date() - 38),
-                         end = as.character(Sys.Date() - 31)),
-        checkboxInput("smooth", "Apply smoothing to estimated data",
-                         value = FALSE)
-	      radioButtons("Method", label = "Select regression method",
-                         choices = list("Linear" = 1, "GAM" = 2),
-                         selected = 1),
-		    checkboxInput("adjQ", "Adjust range of discharge values for regression", value = FALSE),
-		    numericInput("qRange1", "Lowest daily mean discharge", 0),
-		    numericInput("qRange2", "Highest daily mean discharge", 50000),
-		    checkboxInput("useSeas", "Use seasonality", value = FALSE)
-	  ),
-	   #Tools the the time series comparison graph
-	   menuItem("Time Series Comparison", tabName = "tabset1",
-	      textInput("ID", "Station ID(s) for time series tab", "ID"),
-          dateRangeInput("dates",
-            "Date range for time series",
-            start = as.character(Sys.Date() - 38),
-            end = as.character(Sys.Date() - 31)),
-		  textInput("tz", "Time zone to use", "America/Chicago"),
-          radioButtons("timeStep", label = "Select time step",
-            choices = list("Daily" = 1, "Monthly" = 2, "Annual" = 3, "Unit" = 4),
-            selected = 1)
-	   ),
+	           dateRangeInput("dates4",
+	                          "Date range for missing DVs to smooth",
+	                          start = as.character(Sys.Date() - 38),
+	                          end = as.character(Sys.Date() - 31)),
+	           checkboxInput("smooth", "Apply smoothing to estimated data",
+	                         value = FALSE),
+	           radioButtons("Method", label = "Select regression method",
+	                        choices = list("Linear" = 1, "GAM" = 2),
+	                        selected = 1),
+	           checkboxInput("adjQ", "Adjust range of discharge values for regression", value = FALSE),
+	           numericInput("qRange1", "Lowest daily mean discharge", 0),
+	           numericInput("qRange2", "Highest daily mean discharge", 50000),
+	           checkboxInput("useSeas", "Use seasonality", value = FALSE)
+	           ),
+	  menuItem("Time Series Comparison", tabName = "tabset1",
+	           textInput("ID", "Station ID(s) for time series tab", "ID"),
+	           dateRangeInput("dates",
+	                          "Date range for time series",
+	                          start = as.character(Sys.Date() - 38),
+	                          end = as.character(Sys.Date() - 31)),
+	           textInput("tz", "Time zone to use", "America/Chicago"),
+	           radioButtons("timeStep", label = "Select time step",
+	                        choices = list("Daily" = 1, "Monthly" = 2, "Annual" = 3, "Unit" = 4),
+	                        selected = 1)
+	           ),
 	  downloadButton('downloadData', 'Download')
+	  )
    )
-)
 
 body <- dashboardBody(
   fluidRow(
     tabBox(id = "tabset1", height = "450px", width = "900px",
-    #Time series graph of explanatory stations, response stations, conf intervals,
-	  #and estimated data... with added zoom
-	  tabPanel("Time Series Est",
-	           plotOutput ("plot4", height = 400,
-                     brush = brushOpts(
-                       id = "plot4Brush",
-                       resetOnNew = FALSE))),
-	  #residuals graphs
-      tabPanel("Residuals",
-         plotOutput ("plot5", height = 400)),
-      #data table
-	  tabPanel("Data Table",
-               DT::dataTableOutput ("table")),
-      #general times series comparison graph
-	  tabPanel("Time Series Comp",
-         plotOutput ("plot1", height = 400)))
+           tabPanel("Time Series Est",
+                    plotOutput ("plot4", height = 400,
+                                brush = brushOpts(
+                                  id = "plot4Brush",
+                                  resetOnNew = FALSE))),
+           tabPanel("Residuals",
+                    plotOutput ("plot5", height = 400)),
+           tabPanel("Data Table",
+                    DT::dataTableOutput ("table")),
+           tabPanel("Time Series Comp",
+                    plotOutput ("plot1", height = 400)))
     ),
   fluidRow(
     tabBox(id = "tabset2", side ="left", height = "450px",
-      tabPanel("Estimated vs Observed",
-         plotOutput ("plot3", height = 400, width = 400)),
-      tabPanel("Response vs Explanatory 1",
-         plotOutput ("plot2", height = 400, width = 400)),
-      tabPanel("Response vs Explanatory 2",
-         plotOutput ("plot6", height = 400, width = 400)),
-	  tabPanel("Plot Zoom",
-         plotOutput("plot7", height = 400)),
-	  tabPanel("Smoothed DVs",
-         plotOutput("plot8", height = 400))
-	),
+           tabPanel("Estimated vs Observed",
+                    plotOutput ("plot3", height = 400, width = 400)),
+           tabPanel("Response vs Explanatory 1",
+                    plotOutput ("plot2", height = 400, width = 400)),
+           tabPanel("Response vs Explanatory 2",
+                    plotOutput ("plot6", height = 400, width = 400)),
+           tabPanel("Plot Zoom",
+                    plotOutput("plot7", height = 400)),
+           tabPanel("Smoothed DVs",
+                    plotOutput("plot8", height = 400))
+           ),
     tabBox(id = "tabset3", side = "left", height = "465px",
-      tabPanel("Regression Summary",
-        verbatimTextOutput ("regSum")),
-	  #correlation table
-	  tabPanel("Correlation Table",
-               DT::dataTableOutput ("complist"), width = "300px"),
-	  tabPanel("Available DVs",
-	    DT::dataTableOutput ("availDVs"))
-   )
+           tabPanel("Regression Summary",
+                    verbatimTextOutput ("regSum")),
+           tabPanel("Correlation Table",
+                    DT::dataTableOutput ("complist"), width = "300px"),
+           tabPanel("Available DVs",
+                    DT::dataTableOutput ("availDVs"))
+           )
+    )
   )
- )
 
 ui <- dashboardPage(skin = "black", header, sidebar, body)
 
 server <- function(input, output) ({
-
+  
   getDat <- reactive({
 
    if (input$use2 == FALSE) {
@@ -156,16 +138,16 @@ server <- function(input, output) ({
       endDateLag <- endDate + as.difftime(input$lag1, units = "days")
 
       daty <- readNWISdv(siteNumber=input$yID,
-                           startDate = startDate,
-                           endDate = endDate,
-                           parameterCd = "00060",
+                         startDate = startDate,
+                         endDate = endDate,
+                         parameterCd = "00060",
                          statCd = "00003")
 
       datx <- readNWISdv(siteNumber=input$xID,
-                           startDate = startDateLag,
-                           endDate = endDateLag,
-                           parameterCd = "00060",
-                           statCd = "00003")
+                         startDate = startDateLag,
+                         endDate = endDateLag,
+                         parameterCd = "00060",
+                         statCd = "00003")
 
       daty$X_00060_00003 <- ifelse(daty$X_00060_00003 == 0, NA, daty$X_00060_00003)
 
@@ -212,22 +194,22 @@ server <- function(input, output) ({
       endDateLag2 <- endDate + as.difftime(input$lag2, units = "days")
 
       daty <- readNWISdv(siteNumber=input$yID,
-                           startDate = startDate,
-                           endDate = endDate,
-                           parameterCd = "00060",
+                         startDate = startDate,
+                         endDate = endDate,
+                         parameterCd = "00060",
                          statCd = "00003")
 
       datx <- readNWISdv(siteNumber=input$xID,
-                           startDate = startDateLag,
-                           endDate = endDateLag,
-                           parameterCd = "00060",
+                         startDate = startDateLag,
+                         endDate = endDateLag,
+                         parameterCd = "00060",
                          statCd = "00003")
 
       datx2 <- readNWISdv(siteNumber=input$xID2,
-                            startDate = startDateLag2,
-                            endDate = endDateLag2,
-                            parameterCd = "00060",
-                            statCd = "00003")
+                          startDate = startDateLag2,
+                          endDate = endDateLag2,
+                          parameterCd = "00060",
+                          statCd = "00003")
 
       daty$X_00060_00003 <- ifelse(daty$X_00060_00003 == 0, NA, daty$X_00060_00003)
 
@@ -294,15 +276,15 @@ server <- function(input, output) ({
       endDateLagP <- endDateP + as.difftime(input$lag1, units = "days")
 
       datyP <- readNWISdv(siteNumber=input$yID,
-                            startDate = startDateP,
-                            endDate = endDateP,
-                            parameterCd = "00060",
+                          startDate = startDateP,
+                          endDate = endDateP,
+                          parameterCd = "00060",
                           statCd = "00003")
 
       datxP <- readNWISdv(siteNumber=input$xID,
-                            startDate = startDateLagP,
-                            endDate = endDateLagP,
-                            parameterCd = "00060",
+                          startDate = startDateLagP,
+                          endDate = endDateLagP,
+                          parameterCd = "00060",
                           statCd = "00003")
 
       datyP$X_00060_00003 <- ifelse(datyP$X_00060_00003 == 0, NA, datyP$X_00060_00003)
@@ -344,22 +326,22 @@ server <- function(input, output) ({
       endDateLagP2 <- endDateP + as.difftime(input$lag2, units = "days")
 
       datyP <- readNWISdv(siteNumber=input$yID,
-                            startDate = startDateP,
-                            endDate = endDateP,
-                            parameterCd = "00060",
-                            statCd = "00003")
+                          startDate = startDateP,
+                          endDate = endDateP,
+                          parameterCd = "00060",
+                          statCd = "00003")
 
       datxP <- readNWISdv(siteNumber=input$xID,
-                            startDate = startDateLagP,
-                            endDate = endDateLagP,
-                            parameterCd = "00060",
-                            statCd = "00003")
+                          startDate = startDateLagP,
+                          endDate = endDateLagP,
+                          parameterCd = "00060",
+                          statCd = "00003")
 
       datx2P <- readNWISdv(siteNumber=input$xID2,
-                             startDate = startDateLagP2,
-                             endDate = endDateLagP2,
-                             parameterCd = "00060",
-                             statCd = "00003")
+                           startDate = startDateLagP2,
+                           endDate = endDateLagP2,
+                           parameterCd = "00060",
+                           statCd = "00003")
 
       datyP$X_00060_00003 <- ifelse(datyP$X_00060_00003 == 0, NA, datyP$X_00060_00003)
 
@@ -442,13 +424,13 @@ server <- function(input, output) ({
       name <- paste0("corr_", i)
       print(i)
       datInd <- readNWISdv(site = i,
-                             startDate = as.character(Sys.Date() - 730),
-                             endDate = as.character(Sys.Date() - 365),
-                             parameterCd = "00060", statCd = "00003")
+                           startDate = as.character(Sys.Date() - 730),
+                           endDate = as.character(Sys.Date() - 365),
+                           parameterCd = "00060", statCd = "00003")
       datRef <- readNWISdv(site = input$ID3,
-                             startDate = as.character(Sys.Date() - 730),
-                             endDate = as.character(Sys.Date() - 365),
-                             parameterCd = "00060", statCd = "00003")
+                           startDate = as.character(Sys.Date() - 730),
+                           endDate = as.character(Sys.Date() - 365),
+                           parameterCd = "00060", statCd = "00003")
       info <- subset(siteInfo, site_no == i)
       drnArea <- info[,2]
       if (nrow(datInd) >= 365) {
@@ -475,26 +457,26 @@ server <- function(input, output) ({
     compDF <- as.data.frame(complist)
 
     compDF <- t(compDF)
+    
+    compDF <- data.frame(compDF)
 
-	compDF <- data.frame(compDF)
+  	unfactorize <- colnames(compDF[,2:13])
 
-	unfactorize <- colnames(compDF[,2:13])
+	  compDF[,unfactorize] <- lapply(unfactorize, function(x) as.numeric(as.character(compDF[,x])))
 
-	compDF[,unfactorize] <- lapply(unfactorize, function(x) as.numeric(as.character(compDF[,x])))
+	  compDF <- na.omit(compDF)
 
-	compDF <- na.omit(compDF)
+	  compNew <- compDF[,c(3:13)]
 
-	compNew <- compDF[,c(3:13)]
+	  bestLag <- colnames(compNew)[apply(compNew,1,which.max)]
 
-	bestLag <- colnames(compNew)[apply(compNew,1,which.max)]
+	  bestCor <- apply(compNew, 1, function(x) max(x, na.rm = TRUE))
 
-	bestCor <- apply(compNew, 1, function(x) max(x, na.rm = TRUE))
+	  newDF <- data.frame(siteNo = compDF$site_no, drainageArea = compDF$drainageArea, bestCor = bestCor, Lag = bestLag)
 
-	newDF <- data.frame(siteNo = compDF$site_no, drainageArea = compDF$drainageArea, bestCor = bestCor, Lag = bestLag)
+  	newDF <- newDF[with(newDF, order(-bestCor)), ]
 
-	newDF <- newDF[with(newDF, order(-bestCor)), ]
-
-	newDF <- newDF[c(1:20),]
+	  newDF <- newDF[c(1:20),]
 
     DT::datatable(newDF, options = list(scrollX = TRUE, scrolly = TRUE), rownames = FALSE)
 
