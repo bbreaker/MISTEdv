@@ -86,29 +86,29 @@ body <- dashboardBody(
   fluidRow(
     tabBox(id = "tabset1", height = "450px", width = "900px",
            tabPanel("Time Series Est",
-                    plotOutput ("plot4", height = 400,
+                    plotOutput ("allPlot", height = 400,
                                 brush = brushOpts(
-                                  id = "plot4Brush",
+                                  id = "allPlotBrush",
                                   resetOnNew = FALSE))),
            tabPanel("Residuals",
-                    plotOutput ("plot5", height = 400)),
+                    plotOutput ("mnthRsd", height = 400)),
            tabPanel("Data Table",
                     DT::dataTableOutput ("table")),
            tabPanel("Time Series Comp",
-                    plotOutput ("plot1", height = 400)))
+                    plotOutput ("tsComp", height = 400)))
     ),
   fluidRow(
     tabBox(id = "tabset2", side ="left", height = "450px",
            tabPanel("Estimated vs Observed",
-                    plotOutput ("plot3", height = 400, width = 400)),
+                    plotOutput ("EstVsObsPlot", height = 400, width = 400)),
            tabPanel("Response vs Explanatory 1",
-                    plotOutput ("plot2", height = 400, width = 400)),
+                    plotOutput ("YvsXplot1", height = 400, width = 400)),
            tabPanel("Response vs Explanatory 2",
-                    plotOutput ("plot6", height = 400, width = 400)),
+                    plotOutput ("YvsXplot2", height = 400, width = 400)),
            tabPanel("Plot Zoom",
-                    plotOutput("plot7", height = 400)),
+                    plotOutput("zoomPlot", height = 400)),
            tabPanel("Smoothed DVs",
-                    plotOutput("plot8", height = 400))
+                    plotOutput("smthPlot", height = 400))
            ),
     tabBox(id = "tabset3", side = "left", height = "465px",
            tabPanel("Regression Summary",
@@ -482,7 +482,7 @@ server <- function(input, output) ({
 
   })
 
-  output$plot1 <- renderPlot({
+  output$tsComp <- renderPlot({
 
    if (input$timeStep == 2) {
 
@@ -637,7 +637,7 @@ server <- function(input, output) ({
 
  })
 
-  output$plot2 <- renderPlot ({
+  output$YvsXplot1 <- renderPlot ({
 
 	  dat <- getDat()
 
@@ -677,7 +677,7 @@ server <- function(input, output) ({
 
   })
 
-  output$plot3 <- renderPlot ({
+  output$EstVsObsPlot <- renderPlot ({
 
 	dat <- getDat()
 
@@ -1313,7 +1313,7 @@ server <- function(input, output) ({
 
   })
 
-  output$plot4 <- renderPlot({
+  output$allPlot <- renderPlot({
 
 	dat <- getDat()
 
@@ -1619,7 +1619,7 @@ server <- function(input, output) ({
 
   })
 
-  output$plot5 <- renderPlot({
+  output$mnthRsd <- renderPlot({
 
 	dat <- getDat()
 
@@ -1849,7 +1849,7 @@ server <- function(input, output) ({
 
     })
 
-  output$plot6 <- renderPlot({
+  output$YvsXplot2 <- renderPlot({
 
 	  dat <- getDat()
 
@@ -1896,7 +1896,7 @@ server <- function(input, output) ({
   ranges2 <- reactiveValues(x = NULL, y = NULL)
 
   observe({
-   brush <- input$plot4Brush
+   brush <- input$allPlotBrush
    if (!is.null(brush)) {
     ranges2$x <- c(brush$xmin, brush$xmax)
     ranges2$y <- c(brush$ymin, brush$ymax)
@@ -1907,7 +1907,7 @@ server <- function(input, output) ({
    }
   })
 
-  output$plot7 <- renderPlot({
+  output$zoomPlot <- renderPlot({
 
 	dat <- getDat()
 
@@ -2201,7 +2201,7 @@ server <- function(input, output) ({
 
   })
 
-  output$plot8 <- renderPlot({
+  output$smthPlot <- renderPlot({
 
 	if (input$smooth == TRUE) {
 
