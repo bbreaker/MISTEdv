@@ -107,6 +107,8 @@ body <- dashboardBody(
                     plotOutput ("YvsXplot1", height = 400, width = 400)),
            tabPanel("Response vs Explanatory 2",
                     plotOutput ("YvsXplot2", height = 400, width = 400)),
+           tabPanel("Residuals",
+                    plotOutput("dvResids", height = 400)),
            tabPanel("Plot Zoom",
                     plotOutput("zoomPlot", height = 400)),
            tabPanel("Smoothed DVs",
@@ -443,6 +445,12 @@ server <- function(input, output) ({
 
   source("YvsXPlot2.R",local=TRUE)$value
 
+  ##################################################################
+  
+  ##################################################################
+  
+  source("dvResids.R",local=TRUE)$value
+  
   ##################################################################
 
   ranges2 <- reactiveValues(x = NULL, y = NULL)

@@ -2,8 +2,6 @@ output$YvsXPlot1 <- renderPlot ({
 
   dat <- getDat()
 
-  datP <- getDatP()
-
     if (input$Method == 1) {
 
       p <- ggplot(data = dat, aes(x = X_00060_00003.x, y = X_00060_00003.y)) +
