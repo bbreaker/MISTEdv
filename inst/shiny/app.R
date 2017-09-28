@@ -118,7 +118,7 @@ body <- dashboardBody(
            tabPanel("Regression Summary",
                     verbatimTextOutput ("regSum")),
            tabPanel("Correlation Table",
-                    DT::dataTableOutput ("complist"), width = "300px"),
+                    DT::dataTableOutput ("compList"), width = "300px"),
            tabPanel("Available DVs",
                     DT::dataTableOutput ("availDVs"))
            )
