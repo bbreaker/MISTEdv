@@ -29,7 +29,7 @@ sidebar <- dashboardSidebar(width = 300,
    sidebarMenu(
      submitButton("Apply changes", icon("paper-plane")),
      menuItem("Find Correlated Stations", tabName = "tabset1",
-              textInput("Station ID", "Station ID for response station", "ID3"),
+              textInput("ID3", "Station ID for response station", "Station ID"),
               numericInput("long1", "Western most longitude", -94.9),
               numericInput("lat1", "Southern most latitude", 35.4),
               numericInput("long2", "Eastern most longitude", -91.5),
