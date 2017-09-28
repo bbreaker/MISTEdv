@@ -70,9 +70,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_continuous(labels = comma) +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
 
@@ -86,8 +85,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            scale_y_log10() +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
@@ -165,9 +164,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            #scale_y_log10() +
-            #annotation_logticks(sides = "rl") +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_continuous(labels = comma) +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
 
@@ -181,8 +179,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            scale_y_log10() +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
@@ -260,7 +258,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_continuous(labels = comma) +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
 
@@ -275,8 +274,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            scale_y_log10() +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
@@ -355,7 +354,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_continuous(labels = comma) +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
 
@@ -370,8 +370,8 @@ datP <- getDatP()
             geom_line(data = datP, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datP, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datP, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            geom_point(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), shape = 8) +
-            scale_y_log10() +
+            geom_line(data = datP, aes(x = Date, y = Smoothed, color = "Smoothed"), linetype = "dotdash") +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())

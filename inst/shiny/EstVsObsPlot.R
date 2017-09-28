@@ -33,6 +33,8 @@ datP <- getDatP()
         p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
           geom_point(size = 3) +
           stat_smooth(method = "lm") +
+          scale_x_continuous(labels = comma) +
+          scale_y_continuous(labels = comma) +
           labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
           theme_bw() + theme(legend.title = element_blank())
 
@@ -67,6 +69,8 @@ datP <- getDatP()
         p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
           geom_point(size = 3) +
           stat_smooth(method = "lm") +
+          scale_x_continuous(labels = comma) +
+          scale_y_continuous(labels = comma) +
           labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
           theme_bw() + theme(legend.title = element_blank())
 
@@ -103,6 +107,8 @@ datP <- getDatP()
         p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
           geom_point(size = 3) +
           stat_smooth(method = "lm") +
+          scale_x_continuous(labels = comma) +
+          scale_y_continuous(labels = comma) +
           labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
           theme_bw() + theme(legend.title = element_blank())
 
@@ -135,6 +141,8 @@ datP <- getDatP()
         p <- ggplot(data = datP, aes(x = X_00060_00003.y, y = Predicted)) +
           geom_point(size = 3) +
           stat_smooth(method = "lm") +
+          scale_x_continuous(labels = comma) +
+          scale_y_continuous(labels = comma) +
           labs(x = "Observed discharge, in cubic feet per second", y = "Estimated discharge, in cubic feet per second") +
           theme_bw() + theme(legend.title = element_blank())
 

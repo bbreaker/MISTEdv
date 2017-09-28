@@ -51,6 +51,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
+            scale_y_continuous(labels = comma) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
@@ -65,7 +66,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            scale_y_log10() +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
@@ -124,6 +125,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
+            scale_y_continuous(labels = comma) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
@@ -138,7 +140,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = Estimated, color = "Estimated"), linetype = "longdash") +
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
-            scale_y_log10() +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
@@ -197,6 +199,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
+            scale_y_log10(labels = comma) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
@@ -214,7 +217,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-            scale_y_log10() +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
@@ -272,6 +275,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitUpper), color = "grey", linetype = "dashed") +
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
+            scale_y_continuous(labels = comma) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank())
@@ -289,7 +293,7 @@ datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shi
             geom_line(data = datPlot, aes(x = Date, y = fitLower), color = "grey", linetype = "dashed") +
             geom_point(data = datMeas, aes(x = measurement_dt, y = discharge_va), color = "black", size = 2) +
             geom_text(data = datMeas, aes(x = measurement_dt, y = discharge_va, label = labelN, vjust = "inward", hjust = "inward", check_overlap = TRUE), color = "medium blue") +
-            scale_y_log10() +
+            scale_y_log10(labels = comma) +
             annotation_logticks(sides = "rl") +
             labs(x = "Date", y = "Discharge, in cubic feet per second") +
             theme_bw() + theme(legend.title = element_blank(), panel.grid.minor = element_blank())
