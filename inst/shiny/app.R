@@ -603,7 +603,7 @@ server <- function(input, output) ({
 
         }
 
-        else if (input$useSeas == TRUE) {
+          else if (input$useSeas == TRUE) {
 
           regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + fourier(Date), data = dat)
 
@@ -611,13 +611,18 @@ server <- function(input, output) ({
 
         }
 
-        estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+          estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
 
-        datPred <- data.frame(estVals)
+          datPred <- data.frame(estVals)
 
-        datPred[,(1:4)] <- 10^datPred[,(1:4)]
+          upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
 
-        datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+          lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+
+          datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3),
+                              fitUpper = signif(10^(upr), 3),
+                              fitLower = signif(10^(lwr), 3),
+                              standardError = signif(datPred$se.fit, 3))
 
         datP <- cbind(datP, datPred)
 
@@ -793,7 +798,7 @@ server <- function(input, output) ({
 
         if (input$useSeas == FALSE) {
 
-          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = datP)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs"), data = dat)
 
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2)
 
@@ -801,19 +806,24 @@ server <- function(input, output) ({
 
         else if (input$useSeas == TRUE) {
 
-          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = datP)
+          regObj <- gam(log10(X_00060_00003.y) ~ s(log10(X_00060_00003.x), bs = "cs") + s(log10(X_00060_00003.x2), bs = "cs") + fourier(Date), data = dat)
 
           predSet <- data.frame(Date = datP$Date, X_00060_00003.x = datP$X_00060_00003.x, X_00060_00003.x2 = datP$X_00060_00003.x2, fourier(datP$Date))
 
         }
 
-        estVals <- predict(regObj, predSet, se.fit = TRUE, interval = "prediction")
+        estVals <- predict(regObj, predSet, type = "link", se.fit = TRUE)
 
         datPred <- data.frame(estVals)
 
-        datPred[,(1:4)] <- 10^datPred[,(1:4)]
+        upr <- gamIntervals(estVals, regObj, interval = "prediction")$upr
 
-        datPred <- data.frame(Estimated = datPred$fit.fit, fitUpper = datPred$fit.upr, fitLower = datPred$fit.lwr, standardError = datPred$se.fit)
+        lwr <- gamIntervals(estVals, regObj, interval = "prediction")$lwr
+
+        datPred <- data.frame(Estimated = signif(10^(datPred$fit), 3),
+                              fitUpper = signif(10^(upr), 3),
+                              fitLower = signif(10^(lwr), 3),
+                              standardError = signif(datPred$se.fit, 3))
 
         datP <- cbind(datP, datPred)
 
