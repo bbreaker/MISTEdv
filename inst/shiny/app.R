@@ -16,7 +16,7 @@ library (broom)
 
 source("global.R")
 
-options(DT.options = list(pageLength = 5, language = list(search = 'Filter:')))
+options(DT.options = list(pageLength = 5, lengthMenu = c(5, 7), language = list(search = 'Filter:')))
 
 header <- dashboardHeader(title = "MISTEdv", titleWidth = 300,
                           tags$li(a(href = "https://www.usgs.gov/products/data-and-tools/real-time-data/water",
