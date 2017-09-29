@@ -4,9 +4,9 @@ dat <- getDat()
 
 datP <- getDatP()
 
-datMeas <- readNWISmeas(siteNumber = input$yID, startDate = input$dates2[1], endDate = input$dates2[2], tz = Sys.timezone())
+datMeas <- readNWISmeas(siteNumber = input$yID, startDate = input$dates2[1], endDate = input$dates2[2], expanded = TRUE)
 
-datMeas$labelN <- paste0("Q = ", datMeas$discharge_va, ", shift = ", datMeas$shift_adj_va, ", %diff = ", datMeas$diff_from_rating_pc)
+datMeas$labelN <- paste0("Mmt# = ", datMeas$measurement_nu, ", Q = ", datMeas$discharge_va)
 
   if (input$use2 == FALSE) {
 
