@@ -58,7 +58,7 @@ if (input$use2 == FALSE) {
 
           smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
 
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
+          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = signif(smPeriod$adjResid, 3))
 
           if (smPeriod$Smoothed < 10) {
             smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
@@ -159,7 +159,7 @@ if (input$use2 == FALSE) {
 
           smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
 
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
+          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = signif(smPeriod$adjResid, 3))
 
           if (smPeriod$Smoothed < 10) {
             smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
@@ -259,7 +259,7 @@ if (input$use2 == FALSE) {
 
           smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
 
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
+          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = signif(smPeriod$adjResid, 3))
 
           if (smPeriod$Smoothed < 10) {
             smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
@@ -360,7 +360,7 @@ if (input$use2 == FALSE) {
 
           smPeriod$Smoothed <- smPeriod$Estimated + smPeriod$adjResid
 
-          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = smPeriod$adjResid)
+          smPeriod <- data.frame(Date = smPeriod$Date, Smoothed = smPeriod$Smoothed, adjResid = signif(smPeriod$adjResid, 3))
 
           if (smPeriod$Smoothed < 10) {
             smPeriod$Smoothed <- signif(smPeriod$Smoothed, 2)
